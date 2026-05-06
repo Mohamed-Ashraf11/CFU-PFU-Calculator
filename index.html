@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CFU / PFU Calculator</title>
+<style>
+    body { font-family: Arial; padding: 30px; max-width: 500px; margin: auto; }
+    input, button { margin: 5px 0; padding: 8px; width: 100%; }
+    .result { margin-top: 20px; font-weight: bold; }
+</style>
+</head>
+
+<body>
+
+<h2>🧪 CFU / PFU Calculator</h2>
+
+<label>Counts (comma separated)</label>
+<input id="counts" placeholder="e.g. 25,28,30">
+
+<label>Dilution (e.g. 1e-2)</label>
+<input id="dilution" placeholder="e.g. 1e-2">
+
+<label>Volume plated (µL)</label>
+<input id="volume" value="10">
+
+<button onclick="calculate()">Calculate</button>
+
+<div class="result" id="output"></div>
+
+<script>
+function calculate() {
+    let counts = document.getElementById("counts").value.split(",").map(Number);
+    let dilution = parseFloat(document.getElementById("dilution").value);
+    let volume_ul = parseFloat(document.getElementById("volume").value);
+
+    let volume_ml = volume_ul / 1000;
+
+    let avg = counts.reduce((a,b)=>a+b,0) / counts.length;
+
+    let sd = Math.sqrt(
+        counts.map(x => Math.pow(x - avg, 2)).reduce((a,b)=>a+b,0) / (counts.length - 1)
+    );
+
+    let factor = 1 / (volume_ml * dilution);
+
+    let cfu = avg * factor;
+    let sd_cfu = sd * factor;
+    let log = Math.log10(cfu);
+
+    document.getElementById("output").innerHTML =
+        `Average: ${avg.toFixed(2)}<br>
+         CFU/mL: ${cfu.toExponential(2)}<br>
+         Log10: ${log.toFixed(2)}<br>
+         SD: ${sd_cfu.toExponential(2)}`;
+}
+</script>
+
+</body>
+</html>
