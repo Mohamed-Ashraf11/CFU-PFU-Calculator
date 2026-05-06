@@ -62,7 +62,8 @@ button:hover {
 
 #dilutionPreview {
     font-size: 16px;
-    color: #666;
+    font-weight: bold;
+    color: #2c7be5;
     margin-top: -8px;
     margin-bottom: 10px;
 }
@@ -85,8 +86,6 @@ button:hover {
 
 <h2>🧪 CFU / PFU Calculator</h2>
 
-
-
 <label>Counts (comma separated)</label>
 <input id="counts" placeholder="e.g. 25,28,30">
 
@@ -107,7 +106,7 @@ Developed by M. Ashraf | Food Hygienic Chemistry Lab | Kyushu University
 
 <script>
 
-// 🔹 scientific format with superscript
+// 🔹 scientific format (×10ⁿ)
 function formatScientific(num) {
     if (num === 0) return "0";
 
@@ -127,6 +126,13 @@ function formatScientific(num) {
         .join("");
 
     return mantissa.toFixed(2) + " × 10" + expStr;
+}
+
+// 🔹 Excel format (2.57E5)
+function toExcelScientific(num) {
+    let exponent = Math.floor(Math.log10(num));
+    let mantissa = num / Math.pow(10, exponent);
+    return mantissa.toFixed(2) + "E" + exponent;
 }
 
 // 🔹 live dilution preview
@@ -161,22 +167,16 @@ function calculate() {
 
     let avg = counts.reduce((a,b)=>a+b,0) / counts.length;
 
-    let sd = Math.sqrt(
-        counts.map(x => Math.pow(x - avg, 2))
-        .reduce((a,b)=>a+b,0) / (counts.length - 1)
-    );
-
     let factor = 1 / (volume_ml * dilution);
 
     let cfu = avg * factor;
-    let sd_cfu = sd * factor;
     let log = Math.log10(cfu);
 
     document.getElementById("output").innerHTML =
         `Average: ${avg.toFixed(2)}<br>
          CFU/mL: ${formatScientific(cfu)}<br>
-         Log₁₀: ${log.toFixed(2)}<br>
-         SD: ${formatScientific(sd_cfu)}`;
+         <span style="font-size:12px; color:gray;">For Excel: ${toExcelScientific(cfu)}</span><br>
+         Log₁₀: ${log.toFixed(2)}`;
 }
 
 </script>
