@@ -3,10 +3,38 @@
 <head>
 <meta charset="UTF-8">
 <title>CFU / PFU Calculator</title>
+
 <style>
-    body { font-family: Arial; padding: 30px; max-width: 500px; margin: auto; }
-    input, button { margin: 5px 0; padding: 8px; width: 100%; }
-    .result { margin-top: 20px; font-weight: bold; }
+    body {
+        font-family: Arial;
+        padding: 30px;
+        max-width: 500px;
+        margin: auto;
+    }
+
+    input, button {
+        margin: 5px 0;
+        padding: 8px;
+        width: 100%;
+        font-size: 14px;
+    }
+
+    button {
+        background-color: #2c7be5;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #1a5fd0;
+    }
+
+    .result {
+        margin-top: 20px;
+        font-weight: bold;
+        line-height: 1.6;
+    }
 </style>
 </head>
 
@@ -17,7 +45,7 @@
 <label>Counts (comma separated)</label>
 <input id="counts" placeholder="e.g. 25,28,30">
 
-<label>Dilution (e.g. 1e-2)</label>
+<label>Dilution (e.g. 1e-2 for 1 × 10<sup>-2</sup>)</label>
 <input id="dilution" placeholder="e.g. 1e-2">
 
 <label>Volume plated (µL)</label>
@@ -28,19 +56,52 @@
 <div class="result" id="output"></div>
 
 <script>
+
+// 🔹 Format like: 8.33 × 10⁴
+function formatScientific(num) {
+    if (num === 0) return "0";
+
+    let exponent = Math.floor(Math.log10(num));
+    let mantissa = num / Math.pow(10, exponent);
+
+    // superscript numbers
+    const superscriptMap = {
+        "-": "⁻",
+        "0": "⁰", "1": "¹", "2": "²", "3": "³",
+        "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷",
+        "8": "⁸", "9": "⁹"
+    };
+
+    let expStr = exponent.toString()
+        .split("")
+        .map(char => superscriptMap[char] || char)
+        .join("");
+
+    return mantissa.toFixed(2) + " × 10" + expStr;
+}
+
 function calculate() {
-    let counts = document.getElementById("counts").value.split(",").map(Number);
+
+    let counts = document.getElementById("counts").value
+        .split(",")
+        .map(Number)
+        .filter(x => !isNaN(x));
+
     let dilution = parseFloat(document.getElementById("dilution").value);
     let volume_ul = parseFloat(document.getElementById("volume").value);
 
     let volume_ml = volume_ul / 1000;
 
+    // Average
     let avg = counts.reduce((a,b)=>a+b,0) / counts.length;
 
+    // SD
     let sd = Math.sqrt(
-        counts.map(x => Math.pow(x - avg, 2)).reduce((a,b)=>a+b,0) / (counts.length - 1)
+        counts.map(x => Math.pow(x - avg, 2))
+        .reduce((a,b)=>a+b,0) / (counts.length - 1)
     );
 
+    // Factor
     let factor = 1 / (volume_ml * dilution);
 
     let cfu = avg * factor;
@@ -49,11 +110,16 @@ function calculate() {
 
     document.getElementById("output").innerHTML =
         `Average: ${avg.toFixed(2)}<br>
-         CFU/mL: ${cfu.toExponential(2)}<br>
-         Log10: ${log.toFixed(2)}<br>
-         SD: ${sd_cfu.toExponential(2)}`;
+         CFU/mL: ${formatScientific(cfu)}<br>
+         Log₁₀: ${log.toFixed(2)}<br>
+         SD: ${formatScientific(sd_cfu)}`;
 }
+
 </script>
+<hr style="margin-top:30px;">
+<p style="text-align:center; font-size:12px; color:gray;">
+Developed by M. Ashraf | Food Hygienic Chemistry Lab | Kyushu University
+</p>
 
 </body>
 </html>
